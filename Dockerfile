@@ -1,30 +1,25 @@
-# Use the official Python image from the Python Docker Hub repository as the base image
-FROM python:3.12-slim-bullseye
+# Use Python 3.9 as the base image
+FROM python:3.9-slim
 
-# Set the working directory to /app in the container
+# Set working directory in the container
 WORKDIR /app
 
-# Create a non-root user named 'myuser' with a home directory
-RUN useradd -m myuser
+# Set environment variables (defaults that can be overridden)
+ENV QR_DATA_URL='https://github.com/Hemavathi-2107'
+ENV QR_CODE_DIR='qr_codes'
+ENV QR_CODE_FILENAME='qrcode.png'
+ENV FILL_COLOR='black'
+ENV BACK_COLOR='white'
 
-# Copy the requirements.txt file to the container to install Python dependencies
-COPY requirements.txt ./
-
-# Install the Python packages specified in requirements.txt
+# Copy requirements file and install dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Before copying the application code, create the logs and qr_codes directories
-# and ensure they are owned by the non-root user
-RUN mkdir logs qr_codes && chown myuser:myuser logs qr_codes
+# Copy the Python script
+COPY app.py .
 
-# Copy the rest of the application's source code into the container, setting ownership to 'myuser'
-COPY --chown=myuser:myuser . .
+# Create a volume for the QR codes directory
+VOLUME /app/qr_codes
 
-# Switch to the 'myuser' user to run the application
-USER myuser
-
-# Use the Python interpreter as the entrypoint and the script as the first argument
-# This allows additional command-line arguments to be passed to the script via the docker run command
-ENTRYPOINT ["python", "main.py"]
-# this sets a default argument, its also set in the program but this just illustrates how to use cmd and override it from the terminal
-CMD ["--url","https://github.com/Hemavathi-2107"]
+# Command to run when container starts
+ENTRYPOINT ["python", "app.py"]
